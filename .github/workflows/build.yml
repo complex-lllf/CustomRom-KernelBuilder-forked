@@ -282,29 +282,30 @@ jobs:
 
       - name: Clone Kernel Source
         run: |
-          if [[ "${{ inputs.brand }}" == "Manual-Type" ]]; then
+          if [ "${{ inputs.brand }}" = "Manual-Type" ]; then
             brand="${{ inputs.brand_manual }}"
           else
             brand="${{ inputs.brand }}"
           fi
 
-          if [[ "${{ inputs.kernel_source }}" == "Manual-Type" ]]; then
+          if [ "${{ inputs.kernel_source }}" = "Manual-Type" ]; then
             source="${{ inputs.kernel_source_manual }}"
           else
             source="${{ inputs.kernel_source }}"
           fi
 
-          git clone --depth=1 -b ${{ inputs.kernel_branch }} [ ](@styleLink?key=fc1c008766418b545e0a7a1b7da458ca&style=iconLink&display=urlLink)[https://github.com/](@styleLink?key=fc1c008766418b545e0a7a1b7da458ca&display=urlLink)${source}/${{ inputs.kernel_source_format }}_${brand}_${{ inputs.soc }}.git ${{ inputs.soc }} || exit 1
+          repo_url="https://github.com/${source}/${{ inputs.kernel_source_format }}_${brand}_${{ inputs.soc }}"
+          git clone --depth=1 -b "${{ inputs.kernel_branch }}" "${repo_url}.git" "${{ inputs.soc }}" || exit 1
 
           case "${{ inputs.modules_repo_mode }}" in
             none)
               echo "Skip modules repo clone"
               ;;
             auto)
-              git clone --depth=1 -b ${{ inputs.kernel_branch }} https://github.com/[](@replace=10002)${source}/${{ inputs.kernel_source_format }}_${brand}_${{ inputs.soc }}-modules.git ${{ inputs.soc }}-modules || exit 1
+              git clone --depth=1 -b "${{ inputs.kernel_branch }}" "${repo_url}-modules.git" "${{ inputs.soc }}-modules" || exit 1
               ;;
             manual)
-              git clone --depth=1 ${{ inputs.modules_repo_manual }} ${{ inputs.soc }}-modules || exit 1
+              git clone --depth=1 "${{ inputs.modules_repo_manual }}" "${{ inputs.soc }}-modules" || exit 1
               ;;
           esac
 
