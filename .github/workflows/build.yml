@@ -24,13 +24,13 @@ on:
         description: "SOC: Type your soc"
         required: true
         type: string
-        default: "sm8550"
+        default: "sdm845"
 
       clang_version:
         description: "Clang-Version: Select the clang version of ur kernel"
         required: true
         type: choice
-        default: clang-r563880c
+        default: clang-r487747c
         options:
           - clang-r416183b1
           - clang-r450784d
@@ -38,7 +38,7 @@ on:
           - clang-r536225
           - clang-r547379
           - clang-r563880c
-          
+
       kernel_source:
         description: "Kernel-Source: Kernel repo's org/user on github"
         required: true
@@ -64,13 +64,13 @@ on:
           - ppanzenboeck
 
       kernel_source_manual:
-        description: "Kernel-Source-Manual: If u selected Manual-Type in previous options, manually type ur repo's org/user on github here."
+        description: "Kernel-Source-Manual: If u selected Manual-Type, manually type ur repo's org/user on github here."
         required: false
         type: string
         default: ""
 
       kernel_source_format:
-        description: "Source-Format: Select ur kernel source format(1 for los etc. 2 for yaap etc.)(keep default if u dont know)"
+        description: "Source-Format: Select ur kernel source format"
         required: true
         type: choice
         default: android_kernel
@@ -82,13 +82,13 @@ on:
         description: "Kernel-Branch: such as lineage-23.2 sixteen-qpr1 etc."
         required: true
         type: string
-        default: "lineage-23.2"
-        
+        default: "lineage-21.0"
+
       kernel_configs:
-        description: "Kernel-Configs: Select ur kernel configs(Use Manual-Type to custom it)"
+        description: "Kernel-Configs: Select ur kernel configs"
         required: true
         type: choice
-        default: oplus-sm8550-los
+        default: oplus-sdm845-los
         options:
           - Manual-Type
           - oplus-sdm845-los
@@ -101,7 +101,7 @@ on:
           - oplus-sm8750-los
 
       kernel_configs_manual:
-        description: "Kernel-Configs-Manual: If u selected Manual-Type in previous options, manually type ur kernel configs here."
+        description: "Kernel-Configs-Manual: If Manual-Type selected, type ur configs here"
         required: false
         type: string
         default: ""
@@ -164,7 +164,7 @@ on:
           - "3.18"
 
       modules_repo_mode:
-        description: "Modules-Repo-Mode: none=skip, auto=guess <src>/<fmt>_<brand>_<soc>-modules, manual=use Modules-Repo-Manual URL"
+        description: "Modules-Repo-Mode: none=skip, auto=guess, manual=use URL below"
         required: true
         type: choice
         default: none
@@ -174,51 +174,49 @@ on:
           - manual
 
       modules_repo_manual:
-        description: "Modules-Repo-Manual: Full https clone URL for modules repo when Modules-Repo-Mode=manual"
+        description: "Modules-Repo-Manual: Full https clone URL when mode=manual"
         required: false
         type: string
         default: ""
 
       enable_tmpfs-xattr:
-        description: "TMPFS_XATTR: U can enable this if ur kernel has no CONFIG_TMPFS_XATTR=y"
+        description: "TMPFS_XATTR: enable if kernel has no CONFIG_TMPFS_XATTR=y"
         required: true
         type: boolean
         default: false
 
       enable_gcc:
-        description: "Enable-GCC: Enable the GCC support(mostly for 4.14 and below)"
+        description: "Enable-GCC: Enable GCC support(mostly for 4.14 and below)"
         required: true
         type: boolean
         default: false
-      
+
       enable_gcc_32bits:
-        description: "Enable-GCC-32Bits: Enable the 32Bits GCC support(mostly for 4.9 and below)"
+        description: "Enable-GCC-32Bits: Enable 32Bits GCC(mostly for 4.9 and below)"
         required: true
         type: boolean
         default: false
 
       fuck_modules_sig_protect:
-        description: "Fuck-Modules-Sig-Protect: FUCK MODULES SIG Protect(maybe need for 6.1)"
+        description: "Fuck-Modules-Sig-Protect: bypass module sig protect"
         required: true
         type: boolean
         default: false
 
       fuck_werror:
-        description: "Fuck-Werror: FUCK WERROR IN CONFIGS(by disable WERROR and CC_WERROR)"
+        description: "Fuck-Werror: disable WERROR and CC_WERROR"
         required: true
         type: boolean
         default: false
 
       enable_my_own_susfs_patch:
-        description: "Fuck susfs: apply patches in patches dir about susfs"
+        description: "apply patches in patches dir about susfs"
         required: true
         type: boolean
         default: false
 
 jobs:
   Kernel_CI:
-    env:
-      GH_TOKEN: ${{ secrets.GH_PAT }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -235,46 +233,34 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt update
-          sudo apt install -y \
-          bc bison flex \
-          libssl-dev \
-          libelf-dev \
-          libdw-dev \
-          build-essential \
-          lz4 \
-          git \
-          python3 \
-          curl \
-          dwarves \
-          cpio \
-          gcc-aarch64-linux-gnu
+          sudo apt install -y bc bison flex libssl-dev libelf-dev libdw-dev build-essential lz4 git python3 curl dwarves cpio gcc-aarch64-linux-gnu
 
       - name: Save options
         run: |
           {
-            echo "brand:${{ inputs.brand }}"
-            echo "brand_manual:${{ inputs.brand_manual }}"
-            echo "soc:${{ inputs.soc }}"
-            echo "clang_version:${{ inputs.clang_version }}"
-            echo "kernel_source:${{ inputs.kernel_source }}"
-            echo "kernel_source_manual:${{ inputs.kernel_source_manual }}"
-            echo "kernel_source_format:${{ inputs.kernel_source_format }}"
-            echo "kernel_branch:${{ inputs.kernel_branch }}"
-            echo "kernel_configs:${{ inputs.kernel_configs }}"
-            echo "kernel_configs_manual:${{ inputs.kernel_configs_manual }}"
-            echo "ksu_type:${{ inputs.ksu_type }}"
-            echo "susfs-gki:${{ inputs['susfs-gki'] }}"
-            echo "susfs-nongki:${{ inputs.susfs-nongki }}"
-            echo "droidspaces:${{ inputs.droidspaces }}"
-            echo "modules_repo_mode:${{ inputs.modules_repo_mode }}"
-            echo "modules_repo_manual:${{ inputs.modules_repo_manual }}"
-            echo "enable_tmpfs-xattr:${{ inputs['enable_tmpfs-xattr'] }}"
-            echo "enable_gcc:${{ inputs.enable_gcc }}"
-            echo "enable_gcc_32bits:${{ inputs.enable_gcc_32bits }}"
-            echo "fuck_modules_sig_protect:${{ inputs.fuck_modules_sig_protect }}"
-            echo "fuck_werror:${{ inputs.fuck_werror }}"
-            echo "enable_my_own_susfs_patch:${{ inputs.enable_my_own_susfs_patch }}"
-          } | tee -a options.txt
+            echo "brand=${{ inputs.brand }}"
+            echo "brand_manual=${{ inputs.brand_manual }}"
+            echo "soc=${{ inputs.soc }}"
+            echo "clang_version=${{ inputs.clang_version }}"
+            echo "kernel_source=${{ inputs.kernel_source }}"
+            echo "kernel_source_manual=${{ inputs.kernel_source_manual }}"
+            echo "kernel_source_format=${{ inputs.kernel_source_format }}"
+            echo "kernel_branch=${{ inputs.kernel_branch }}"
+            echo "kernel_configs=${{ inputs.kernel_configs }}"
+            echo "kernel_configs_manual=${{ inputs.kernel_configs_manual }}"
+            echo "ksu_type=${{ inputs.ksu_type }}"
+            echo "susfs-gki=${{ inputs['susfs-gki'] }}"
+            echo "susfs-nongki=${{ inputs.susfs-nongki }}"
+            echo "droidspaces=${{ inputs.droidspaces }}"
+            echo "modules_repo_mode=${{ inputs.modules_repo_mode }}"
+            echo "modules_repo_manual=${{ inputs.modules_repo_manual }}"
+            echo "enable_tmpfs-xattr=${{ inputs['enable_tmpfs-xattr'] }}"
+            echo "enable_gcc=${{ inputs.enable_gcc }}"
+            echo "enable_gcc_32bits=${{ inputs.enable_gcc_32bits }}"
+            echo "fuck_modules_sig_protect=${{ inputs.fuck_modules_sig_protect }}"
+            echo "fuck_werror=${{ inputs.fuck_werror }}"
+            echo "enable_my_own_susfs_patch=${{ inputs.enable_my_own_susfs_patch }}"
+          } > options.txt
 
       - name: Setup Git Auth
         run: |
@@ -312,7 +298,95 @@ jobs:
       - name: Download AOSP Clang
         run: |
           case "${{ inputs.clang_version }}" in
-            "clang-r416183b1")
-              curl -fL -o clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android12-qpr3-release/clang-r416183b1.tar.gz || exit 1
+            clang-r416183b1)
+              curl -fL -o clang.tar.gz "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android12-qpr3-release/clang-r416183b1.tar.gz" || exit 1
               ;;
-            "clang-r45078
+            clang-r450784d)
+              curl -fL -o clang.tar.gz "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android13-qpr3-release/clang-r450784d.tar.gz" || exit 1
+              ;;
+            clang-r487747c)
+              curl -fL -o clang.tar.gz "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android14-qpr3-release/clang-r487747c.tar.gz" || exit 1
+              ;;
+            clang-r536225)
+              curl -fL -o clang.tar.gz "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android15-qpr2-release/clang-r536225.tar.gz" || exit 1
+              ;;
+            clang-r547379)
+              curl -fL -o clang.tar.gz "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android16-qpr3-release/clang-r547379.tar.gz" || exit 1
+              ;;
+            clang-r563880c)
+              curl -fL -o clang.tar.gz "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android16-qpr3-release/clang-r563880c.tar.gz" || exit 1
+              ;;
+            *)
+              echo "Unknown clang version"; exit 1
+              ;;
+          esac
+          file clang.tar.gz | grep -q gzip || exit 1
+
+      - name: Extract Clang and GCC
+        run: |
+          mkdir -p clang
+          tar -xf clang.tar.gz -C clang/
+          if [ "${{ inputs.enable_gcc }}" = "true" ]; then
+            sudo apt install -y gcc-aarch64-linux-gnu
+          fi
+          if [ "${{ inputs.enable_gcc_32bits }}" = "true" ]; then
+            sudo apt install -y gcc-arm-linux-gnueabi
+          fi
+
+      - name: Setup AnyKernel3
+        run: |
+          git clone --depth=1 https://github.com/osm0sis/AnyKernel3.git AnyKernel3
+
+      - name: Build Kernel
+        run: |
+          cd "${{ inputs.soc }}" || exit 1
+
+          export ARCH=arm64
+          export SUBARCH=arm64
+          export LLVM=1
+          export CLANG_TRIPLE=aarch64-linux-gnu-
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          export PATH="${{ github.workspace }}/clang/bin:${PATH}"
+
+          if [ "${{ inputs.kernel_configs }}" = "Manual-Type" ]; then
+            cfg="${{ inputs.kernel_configs_manual }}"
+          else
+            cfg="${{ inputs.kernel_configs }}"
+          fi
+
+          make "${cfg}_defconfig" || exit 1
+
+          if [ "${{ inputs.fuck_werror }}" = "true" ]; then
+            scripts/config --disable WERROR
+            scripts/config --disable CC_WERROR
+          fi
+
+          make -j"$(nproc --all)" Image.gz-dtb || exit 1
+
+      - name: Package AnyKernel3
+        run: |
+          mkdir -p AnyKernel3
+          if [ -f "${{ inputs.soc }}/arch/arm64/boot/Image.gz-dtb" ]; then
+            cp "${{ inputs.soc }}/arch/arm64/boot/Image.gz-dtb" AnyKernel3/
+          elif [ -f "${{ inputs.soc }}/arch/arm64/boot/Image.gz" ]; then
+            cp "${{ inputs.soc }}/arch/arm64/boot/Image.gz" AnyKernel3/
+            if [ -f "${{ inputs.soc }}/arch/arm64/boot/dts/qcom/${{ inputs.soc }}.dtb" ]; then
+              cp "${{ inputs.soc }}/arch/arm64/boot/dts/qcom/${{ inputs.soc }}.dtb" AnyKernel3/
+            fi
+          else
+            echo "No kernel image found"; exit 1
+          fi
+
+          kernel_name="Kernel-${{ inputs.brand }}-${{ inputs.soc }}-${{ inputs.clang_version }}"
+          cd AnyKernel3
+          zip -r9 "../${kernel_name}.zip" ./* || exit 1
+          cd ..
+          echo "ZIP_NAME=${kernel_name}.zip" >> $GITHUB_ENV
+
+      - name: Upload Kernel
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ZIP_NAME }}
+          path: ${{ env.ZIP_NAME }}
+          retention-days: 7
+
