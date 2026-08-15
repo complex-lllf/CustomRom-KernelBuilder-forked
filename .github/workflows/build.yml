@@ -61,6 +61,7 @@ on:
           - Infinity-X-Devices
           - OnePlus12R-development
           - complex-lllf
+          - ppanzenboeck
 
       kernel_source_manual:
         description: "Kernel-Source-Manual: If u selected Manual-Type in previous options, manually type ur repo's org/user on github here."
