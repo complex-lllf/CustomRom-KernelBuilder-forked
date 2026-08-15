@@ -163,11 +163,21 @@ on:
           - 4.4-4.9
           - "3.18"
 
-      has_modules_repo:
-        description: "Has-Modules-Repo: Enable this ur kernel has modules repo(mostly for gki 2.0)"
+      modules_repo_mode:
+        description: "Modules-Repo-Mode: none=skip, auto=guess <src>/<fmt>_<brand>_<soc>-modules, manual=use Modules-Repo-Manual URL"
         required: true
-        type: boolean
-        default: true
+        type: choice
+        default: none
+        options:
+          - none
+          - auto
+          - manual
+
+      modules_repo_manual:
+        description: "Modules-Repo-Manual: Full https clone URL for modules repo when Modules-Repo-Mode=manual"
+        required: false
+        type: string
+        default: ""
 
       enable_tmpfs-xattr:
         description: "TMPFS_XATTR: U can enable this if ur kernel has no CONFIG_TMPFS_XATTR=y"
@@ -256,7 +266,8 @@ jobs:
             echo "susfs-gki:${{ inputs['susfs-gki'] }}"
             echo "susfs-nongki:${{ inputs.susfs-nongki }}"
             echo "droidspaces:${{ inputs.droidspaces }}"
-            echo "has_modules_repo:${{ inputs.has_modules_repo }}"
+            echo "modules_repo_mode:${{ inputs.modules_repo_mode }}"
+            echo "modules_repo_manual:${{ inputs.modules_repo_manual }}"
             echo "enable_tmpfs-xattr:${{ inputs['enable_tmpfs-xattr'] }}"
             echo "enable_gcc:${{ inputs.enable_gcc }}"
             echo "enable_gcc_32bits:${{ inputs.enable_gcc_32bits }}"
@@ -283,11 +294,19 @@ jobs:
             source="${{ inputs.kernel_source }}"
           fi
 
-          git clone --depth=1 -b ${{ inputs.kernel_branch }} https://github.com/${source}/${{ inputs.kernel_source_format }}_${brand}_${{ inputs.soc }}.git ${{ inputs.soc }} || exit 1
+          git clone --depth=1 -b ${{ inputs.kernel_branch }} [ ](@styleLink?key=fc1c008766418b545e0a7a1b7da458ca&style=iconLink&display=urlLink)[https://github.com/](@styleLink?key=fc1c008766418b545e0a7a1b7da458ca&display=urlLink)${source}/${{ inputs.kernel_source_format }}_${brand}_${{ inputs.soc }}.git ${{ inputs.soc }} || exit 1
 
-          if [[ "${{ inputs.has_modules_repo }}" == "true" ]]; then
-            git clone --depth=1 -b ${{ inputs.kernel_branch }} https://github.com/${source}/${{ inputs.kernel_source_format }}_${brand}_${{ inputs.soc }}-modules.git ${{ inputs.soc }}-modules || exit 1
-          fi
+          case "${{ inputs.modules_repo_mode }}" in
+            none)
+              echo "Skip modules repo clone"
+              ;;
+            auto)
+              git clone --depth=1 -b ${{ inputs.kernel_branch }} https://github.com/[](@replace=10002)${source}/${{ inputs.kernel_source_format }}_${brand}_${{ inputs.soc }}-modules.git ${{ inputs.soc }}-modules || exit 1
+              ;;
+            manual)
+              git clone --depth=1 ${{ inputs.modules_repo_manual }} ${{ inputs.soc }}-modules || exit 1
+              ;;
+          esac
 
       - name: Download AOSP Clang
         run: |
@@ -295,14 +314,4 @@ jobs:
             "clang-r416183b1")
               curl -fL -o clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android12-qpr3-release/clang-r416183b1.tar.gz || exit 1
               ;;
-            "clang-r450784d")
-              curl -fL -o clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android13-qpr3-release/clang-r450784d.tar.gz || exit 1
-              ;;
-            "clang-r487747c")
-              curl -fL -o clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android14-qpr3-release/clang-r487747c.tar.gz || exit 1
-              ;;
-            "clang-r536225")
-              curl -fL -o clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android15-qpr2-release/clang-r536225.tar.gz || exit 1
-              ;;
-            "clang-r547379")
-              curl -fL -o clang.tar.gz https://android.googlesource.com/platform/prebuilts/c
+            "clang-r45078
