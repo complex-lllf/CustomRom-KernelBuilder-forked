@@ -354,7 +354,7 @@ jobs:
             cfg="${{ inputs.kernel_configs }}"
           fi
 
-          script/confif --disable CONFIG_NUMA
+          script/config --disable CONFIG_NUMA
           scripts/config --enable CONFIG_MMU_NOTIFIER
           make "${cfg}" || exit 1
 
