@@ -355,6 +355,7 @@ jobs:
           fi
 
           scripts/config --disable CONFIG_NUMA
+          scripts/config --disable CONFIG_CLK_QCOM_DEBUG
           scripts/config --enable CONFIG_MMU_NOTIFIER
           make "${cfg}" || exit 1
 
