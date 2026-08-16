@@ -354,6 +354,7 @@ jobs:
             cfg="${{ inputs.kernel_configs }}"
           fi
 
+          scripts/config --enable CONFIG_MMU_NOTIFIER
           make "${cfg}" || exit 1
 
           if [ "${{ inputs.fuck_werror }}" = "true" ]; then
