@@ -354,7 +354,7 @@ jobs:
             cfg="${{ inputs.kernel_configs }}"
           fi
 
-          make "${cfg}_defconfig" || exit 1
+          make "${cfg}" || exit 1
 
           if [ "${{ inputs.fuck_werror }}" = "true" ]; then
             scripts/config --disable WERROR
