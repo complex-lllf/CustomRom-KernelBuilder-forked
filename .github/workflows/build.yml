@@ -354,15 +354,15 @@ jobs:
             cfg="${{ inputs.kernel_configs }}"
           fi
 
-          scripts/config --disable CONFIG_NUMA
-          scripts/config --disable CONFIG_CLK_QCOM_DEBUG
-          scripts/config --enable CONFIG_MMU_NOTIFIER
-          make "${cfg}" || exit 1
-
           if [ "${{ inputs.fuck_werror }}" = "true" ]; then
             scripts/config --disable WERROR
             scripts/config --disable CC_WERROR
           fi
+
+          scripts/config --disable CONFIG_NUMA
+          scripts/config --disable CONFIG_CLK_QCOM_DEBUG
+          scripts/config --enable CONFIG_MMU_NOTIFIER
+          make "${cfg}" || exit 1
 
           make -j"$(nproc --all)" Image.gz-dtb || exit 1
 
