@@ -605,11 +605,6 @@ jobs:
             echo "CONFIG_WERROR=n" >> arch/arm64/configs/${configs_list[0]}
             echo "Disabled WERROR and CC_WERROR"
           fi
-          if [[ "${{ inputs.fuck_bpf }}" == "true" ]]; then
-             sed -i 's/^CONFIG_KVM=y/CONFIG_KVM=n/' .config
-             sed -i 's/^CONFIG_KVM_ARM_HOST=y/CONFIG_KVM_ARM_HOST=n/' .config
-             sed -i 's/^CONFIG_HAVE_KVM=y/CONFIG_HAVE_KVM=n/' .config
-          fi
 
           if [[ "${{ inputs.fuck_modules_sig_protect }}" == "true" ]]; then
             sed -i '/CONFIG_MODULE_SIG_PROTECT/d' arch/arm64/configs/${configs_list[0]}
@@ -630,6 +625,13 @@ jobs:
           make O=out $KERNEL_CONFIGS $DROIDSPACES_CONFIG
 
           echo "CONFIG_MMU_NOTIFIER=y" >> out/.config
+
+          if [[ "${{ inputs.fuck_kvm }}" == "true" ]]; then
+             sed -i 's/^CONFIG_KVM=y/CONFIG_KVM=n/' out/.config
+             sed -i 's/^CONFIG_KVM_ARM_HOST=y/CONFIG_KVM_ARM_HOST=n/' out/.config
+             sed -i 's/^CONFIG_HAVE_KVM=y/CONFIG_HAVE_KVM=n/' out/.config
+             echo "Disabled KVM and KVM_ARM_HOST"
+          fi
 
       - name: Build Kernel Image
         run: |
