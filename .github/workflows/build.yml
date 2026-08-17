@@ -106,12 +106,6 @@ on:
         type: string
         default: ""
 
-      fuck_bpf:
-       description: "Fuck-BPF: Apply BPF backport patches for Android 16 QPR2 (for 4.9/4.14/4.19)"
-       required: true
-       type: boolean
-       default: false
-
       ksu_type:
         description: "KSU: KernelSU Version"
         required: true
@@ -220,6 +214,11 @@ on:
         required: true
         type: boolean
         default: false
+      fuck_bpf:
+       description: "Fuck-BPF: Apply BPF backport patches for Android 16 QPR2 (for 4.9/4.14/4.19)"
+       required: true
+       type: boolean
+       default: false
 
 jobs:
   Kernel_CI:
