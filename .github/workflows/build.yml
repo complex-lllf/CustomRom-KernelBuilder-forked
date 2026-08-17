@@ -348,6 +348,11 @@ jobs:
           esac
           file clang.tar.gz | grep -q gzip || exit 1
 
+      - name: Clean kernel source
+        run: |
+          cd ${{ inputs.soc }} || exit 1
+          make clean
+
       - name: Extract Clang and GCC
         run: |
           mkdir -p clang
