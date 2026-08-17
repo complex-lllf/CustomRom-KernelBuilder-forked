@@ -106,6 +106,12 @@ on:
         type: string
         default: ""
 
+      fuck_bpf:
+       description: "Fuck-BPF: Apply BPF backport patches for Android 16 QPR2 (for 4.9/4.14/4.19)"
+       required: true
+       type: boolean
+       default: false
+
       ksu_type:
         description: "KSU: KernelSU Version"
         required: true
@@ -349,103 +355,161 @@ jobs:
 
       - name: Include goodies
         run: |
-          cd ${{ inputs.soc }} || exit 1
+         cd ${{ inputs.soc }} || exit 1
+         
+         case "${{ inputs.ksu_type }}" in
+         "None")
+         ;;
 
-          case "${{ inputs.ksu_type }}" in
-            "None")
-              ;;
-            "Official-KernelSU")
-              curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/refs/heads/main/kernel/setup.sh" | bash -s main || exit 1
-              ;;
-            "KowSU")
-              curl -LSs "https://raw.githubusercontent.com/KOWX712/KernelSU/refs/heads/master/kernel/setup.sh" | bash -s master || exit 1
-              ;;
-            "KernelSU-by-xx")
-              curl -LSs "https://raw.githubusercontent.com/backslashxx/KernelSU/refs/heads/master/kernel/setup.sh" | bash -s master || exit 1
-              ;;
-            "KernelSU-Next")
-              curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/refs/heads/dev/kernel/setup.sh" | bash -s dev || exit 1
-              ;;
-            "KernelSU-Next-with-susfs")
-              curl -LSs "https://raw.githubusercontent.com/pershoot/KernelSU-Next/refs/heads/dev-susfs/kernel/setup.sh" | bash -s dev-susfs || exit 1
-              ;;
-            "ReSukiSU"|"ReSukiSU-with-susfs")
-              curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/refs/heads/main/kernel/setup.sh" | bash -s main || exit 1
-              ;;
-          esac
+      "Official-KernelSU")
+        curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/refs/heads/main/kernel/setup.sh" | bash -s main || exit 1
+        ;;
 
-          if [[ "${{ inputs.droidspaces }}" == "6.12" ]]; then
-            curl -Lo patch-for-6.12.patch https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/refs/heads/main/Documentation/resources/kernel-patches/GKI/kernel-6.12/001.GKI-6.12-or-above-fix_sysvipc_kabi.patch || exit 1
-            patch -p1 < patch-for-6.12.patch
-            cp ${GITHUB_WORKSPACE}/configs/droidspaces-gki.config arch/arm64/configs/vendor/droidspaces.config
-          elif [[ "${{ inputs.droidspaces }}" == "5.15-6.6" ]]; then
-            curl -Lo patch-for-below-6.12.patch https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/refs/heads/main/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/001.GKI-below-6.12-fix_sysvipc_kabi_6_7_8.patch || exit 1
-            patch -p1 < patch-for-below-6.12.patch
-            cp ${GITHUB_WORKSPACE}/configs/droidspaces-gki.config arch/arm64/configs/vendor/droidspaces.config
-          elif [[ "${{ inputs.droidspaces }}" == "5.10" ]]; then
-            curl -Lo patch-for-below-6.12.patch https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/refs/heads/main/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/001.GKI-below-6.12-fix_sysvipc_kabi_6_7_8.patch || exit 1
-            patch -p1 < patch-for-below-6.12.patch || exit 1
-            curl -Lo patch-for-5.10-or-lower.patch https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/refs/heads/main/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/002.5.10_or_lower_use_android_abi_padding_for_posix_mqueue.patch || exit 1
-            patch -p1 < patch-for-5.10-or-lower.patch
-            cp ${GITHUB_WORKSPACE}/configs/droidspaces-gki.config arch/arm64/configs/vendor/droidspaces.config
-          elif [[ "${{ inputs.droidspaces }}" == "5.4" ]]; then
-            curl -Lo patch-for-below-6.12.patch https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/refs/heads/main/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/001.GKI-below-6.12-fix_sysvipc_kabi_6_7_8.patch || exit 1
-            patch -p1 < patch-for-below-6.12.patch
-            curl -Lo patch-for-5.10-or-lower.patch https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/refs/heads/main/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/002.5.10_or_lower_use_android_abi_padding_for_posix_mqueue.patch || exit 1
-            sed -i '/ANDROID_OEM_DATA_ARRAY/d' patch-for-5.10-or-lower.patch
-            git apply --recount patch-for-5.10-or-lower.patch
-            cp ${GITHUB_WORKSPACE}/configs/droidspaces-gki.config arch/arm64/configs/vendor/droidspaces.config
-          elif [[ "${{ inputs.droidspaces }}" == "4.14-4.19" ]]; then
-            curl -Lo patch-fix-cgroup.patch https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/refs/heads/main/Documentation/resources/kernel-patches/non-GKI/02.fix_restore%20cgroup%20file%20prefix%20handling%20.patch || exit 1
-            patch -p1 < patch-fix-cgroup.patch
-            cp ${GITHUB_WORKSPACE}/configs/droidspaces-nongki.config arch/arm64/configs/vendor/droidspaces.config
-          elif [[ "${{ inputs.droidspaces }}" == "4.4-4.9" ]]; then
-            cp ${GITHUB_WORKSPACE}/configs/droidspaces-nongki.config arch/arm64/configs/vendor/droidspaces.config
-          elif [[ "${{ inputs.droidspaces }}" == "3.18" ]]; then
-            curl -Lo patch-fix-xt_qtaguid.patch https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/refs/heads/main/Documentation/resources/kernel-patches/non-GKI/01.fix_kernel_panic_in_xt_qtaguid.patch || exit 1
-            patch -p1 < patch-fix-xt_qtaguid.patch
-            cp ${GITHUB_WORKSPACE}/configs/droidspaces-nongki.config arch/arm64/configs/vendor/droidspaces.config
-          fi
+      "KowSU")
+        curl -LSs "https://raw.githubusercontent.com/KOWX712/KernelSU/refs/heads/master/kernel/setup.sh" | bash -s master || exit 1
+        ;;
 
-          if [[ "${{ inputs.ksu_type }}" == *susfs* ]]; then
-            if [[ "${{ inputs.susfs-gki }}" == "None" && "${{ inputs.susfs-nongki }}" == "None" ]]; then
-              echo "skip susfs"
-            elif [[ "${{ inputs.susfs-gki }}" != "None" && "${{ inputs.susfs-nongki }}" != "None" ]]; then
-              echo "what do you mean???, why selected susfs for gki and nongki at the same time"
-              exit 1
-            elif [[ "${{ inputs.susfs-gki }}" != "None" ]]; then
-              git clone -b gki-${{ inputs.susfs-gki }} https://gitlab.com/simonpunk/susfs4ksu.git susfs || exit 1
-              cd susfs || exit 1
-              cp ./kernel_patches/50_add_susfs_in_gki-${{ inputs.susfs-gki }}.patch ../susfs.patch
-              cp ./kernel_patches/fs/* ../fs/
-              cp ./kernel_patches/include/linux/* ../include/linux/
-              cd .. || exit 1
-            elif [[ "${{ inputs.susfs-nongki }}" != "None" ]]; then
-              curl -Lo susfs.patch https://raw.githubusercontent.com/JackA1ltman/NonGKI_Kernel_Build_2nd/refs/heads/mainline/Patches/Patch/susfs_patch_to_${{ inputs.susfs-nongki }}.patch || exit 1
-              curl -Lo inline.sh https://raw.githubusercontent.com/JackA1ltman/NonGKI_Kernel_Build_2nd/refs/heads/mainline/Patches/susfs_inline_hook_patches.sh || exit 1
-            fi
+      "KernelSU-by-xx")
+        curl -LSs "https://raw.githubusercontent.com/backslashxx/KernelSU/refs/heads/master/kernel/setup.sh" | bash -s master || exit 1
+        ;;
 
-            if [[ "${{ inputs.enable_my_own_susfs_patch }}" == "true" ]]; then
-              if [[ "${{ inputs.susfs-gki }}" == "android13-5.15" ]]; then
-                patch -p1 < ${GITHUB_WORKSPACE}/patches/fix_task_mmu_c.patch
-              fi
-            fi
+      "KernelSU-Next")
+        curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/refs/heads/dev/kernel/setup.sh" | bash -s dev || exit 1
+        ;;
 
-            if [[ "${{ inputs.susfs-gki }}" != "None" ]]; then
-              patch -p1 < susfs.patch
-            elif [[ "${{ inputs.susfs-nongki }}" != "None" ]]; then
-              patch -p1 < susfs.patch
-              bash inline.sh
-            fi
+      "KernelSU-Next-with-susfs")
+        curl -LSs "https://raw.githubusercontent.com/pershoot/KernelSU-Next/refs/heads/dev-susfs/kernel/setup.sh" | bash -s dev-susfs || exit 1
+        ;;
 
-            if [[ "${{ inputs.enable_my_own_susfs_patch }}" == "true" ]]; then
-              if [[ "${{ inputs.susfs-nongki }}" == "5.4" ]]; then
-                patch -p1 < ${GITHUB_WORKSPACE}/patches/fix_mount_in_5.4.patch
-              fi
-            fi
-          fi
+      "ReSukiSU"|"ReSukiSU-with-susfs")
+        curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/refs/heads/main/kernel/setup.sh" | bash -s main || exit 1
+        ;;
 
-          touch ./.scmversion
+    esac
+
+
+    if [[ "${{ inputs.droidspaces }}" == "6.12" ]]; then
+
+      curl -Lo patch-for-6.12.patch https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/refs/heads/main/Documentation/resources/kernel-patches/GKI/kernel-6.12/001.GKI-6.12-or-above-fix_sysvipc_kabi.patch || exit 1
+      patch -p1 < patch-for-6.12.patch
+
+      cp ${GITHUB_WORKSPACE}/configs/droidspaces-gki.config arch/arm64/configs/vendor/droidspaces.config
+
+    elif [[ "${{ inputs.droidspaces }}" == "5.15-6.6" ]]; then
+
+      curl -Lo patch-for-below-6.12.patch https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/refs/heads/main/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/001.GKI-below-6.12-fix_sysvipc_kabi_6_7_8.patch || exit 1
+      patch -p1 < patch-for-below-6.12.patch
+
+      cp ${GITHUB_WORKSPACE}/configs/droidspaces-gki.config arch/arm64/configs/vendor/droidspaces.config
+
+    elif [[ "${{ inputs.droidspaces }}" == "5.10" ]]; then
+
+      curl -Lo patch-for-below-6.12.patch https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/refs/heads/main/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/001.GKI-below-6.12-fix_sysvipc_kabi_6_7_8.patch || exit 1
+      patch -p1 < patch-for-below-6.12.patch || exit 1
+
+      curl -Lo patch-for-5.10-or-lower.patch https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/refs/heads/main/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/002.5.10_or_lower_use_android_abi_padding_for_posix_mqueue.patch || exit 1
+      patch -p1 < patch-for-5.10-or-lower.patch
+
+      cp ${GITHUB_WORKSPACE}/configs/droidspaces-gki.config arch/arm64/configs/vendor/droidspaces.config
+
+    elif [[ "${{ inputs.droidspaces }}" == "5.4" ]]; then
+
+      curl -Lo patch-for-below-6.12.patch https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/refs/heads/main/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/001.GKI-below-6.12-fix_sysvipc_kabi_6_7_8.patch || exit 1
+      patch -p1 < patch-for-below-6.12.patch
+
+      curl -Lo patch-for-5.10-or-lower.patch https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/refs/heads/main/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/002.5.10_or_lower_use_android_abi_padding_for_posix_mqueue.patch || exit 1
+      sed -i '/ANDROID_OEM_DATA_ARRAY/d' patch-for-5.10-or-lower.patch
+      git apply --recount patch-for-5.10-or-lower.patch
+
+      cp ${GITHUB_WORKSPACE}/configs/droidspaces-gki.config arch/arm64/configs/vendor/droidspaces.config
+
+    elif [[ "${{ inputs.droidspaces }}" == "4.14-4.19" ]]; then
+
+      curl -Lo patch-fix-cgroup.patch https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/refs/heads/main/Documentation/resources/kernel-patches/non-GKI/02.fix_restore%20cgroup%20file%20prefix%20handling%20.patch || exit 1
+      patch -p1 < patch-fix-cgroup.patch
+
+      cp ${GITHUB_WORKSPACE}/configs/droidspaces-nongki.config arch/arm64/configs/vendor/droidspaces.config
+
+    elif [[ "${{ inputs.droidspaces }}" == "4.4-4.9" ]]; then
+
+      cp ${GITHUB_WORKSPACE}/configs/droidspaces-nongki.config arch/arm64/configs/vendor/droidspaces.config
+
+    elif [[ "${{ inputs.droidspaces }}" == "3.18" ]]; then
+
+      curl -Lo patch-fix-xt_qtaguid.patch https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/refs/heads/main/Documentation/resources/kernel-patches/non-GKI/01.fix_kernel_panic_in_xt_qtaguid.patch || exit 1
+      patch -p1 < patch-fix-xt_qtaguid.patch
+
+      cp ${GITHUB_WORKSPACE}/configs/droidspaces-nongki.config arch/arm64/configs/vendor/droidspaces.config
+
+    fi
+
+    if [[ "${{ inputs.fuck_bpf }}" == "true" ]]; then
+      if git clone --depth=1 https://github.com/techyminati/fuck-bpf.git; then
+        bash fuck-bpf/apply.sh --mb || true
+      fi
+    fi
+
+    if [[ "${{ inputs.ksu_type }}" == *susfs* ]]; then
+
+      if [[ "${{ inputs.susfs-gki }}" == "None" && "${{ inputs.susfs-nongki }}" == "None" ]]; then
+
+        echo "skip susfs"
+
+      elif [[ "${{ inputs.susfs-gki }}" != "None" && "${{ inputs.susfs-nongki }}" != "None" ]]; then
+
+        echo "what do you mean???, why selected susfs for gki and nongki at the same time"
+        exit 1
+
+      elif [[ "${{ inputs.susfs-gki }}" != "None" ]]; then
+
+        git clone -b gki-${{ inputs.susfs-gki }} https://gitlab.com/simonpunk/susfs4ksu.git susfs || exit 1
+        cd susfs || exit 1
+        cp ./kernel_patches/50_add_susfs_in_gki-${{ inputs.susfs-gki }}.patch ../susfs.patch
+        cp ./kernel_patches/fs/* ../fs/
+        cp ./kernel_patches/include/linux/* ../include/linux/
+        cd .. || exit 1
+
+      elif [[ "${{ inputs.susfs-nongki }}" != "None" ]]; then
+
+        curl -Lo susfs.patch https://raw.githubusercontent.com/JackA1ltman/NonGKI_Kernel_Build_2nd/refs/heads/mainline/Patches/Patch/susfs_patch_to_${{ inputs.susfs-nongki }}.patch || exit 1
+        curl -Lo inline.sh https://raw.githubusercontent.com/JackA1ltman/NonGKI_Kernel_Build_2nd/refs/heads/mainline/Patches/susfs_inline_hook_patches.sh || exit 1
+
+      fi
+
+      if [[ "${{ inputs.enable_my_own_susfs_patch }}" == "true" ]]; then
+
+        if [[ "${{ inputs.susfs-gki }}" == "android13-5.15" ]]; then
+
+          patch -p1 < ${GITHUB_WORKSPACE}/patches/fix_task_mmu_c.patch
+
+        fi
+
+      fi
+
+      if [[ "${{ inputs.susfs-gki }}" != "None" ]]; then
+
+        patch -p1 < susfs.patch
+
+      elif [[ "${{ inputs.susfs-nongki }}" != "None" ]]; then
+
+        patch -p1 < susfs.patch
+        bash inline.sh
+
+      fi
+
+      if [[ "${{ inputs.enable_my_own_susfs_patch }}" == "true" ]]; then
+
+        if [[ "${{ inputs.susfs-nongki }}" == "5.4" ]]; then
+
+          patch -p1 < ${GITHUB_WORKSPACE}/patches/fix_mount_in_5.4.patch
+
+        fi
+
+      fi
+
+    fi
+
+    touch ./.scmversion
 
       - name: Make Kernel Configs
         run: |
