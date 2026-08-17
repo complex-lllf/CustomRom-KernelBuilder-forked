@@ -492,8 +492,18 @@ jobs:
 
            elif [[ "${{ inputs.susfs-nongki }}" != "None" ]]; then
 
-             patch -p1 < susfs.patch
+             cp fs/namespace.c fs/namespace.c.backup
+             cp fs/proc/cmdline.c fs/proc/cmdline.c.backup
+             cp fs/proc/task_mmu.c fs/proc/task_mmu.c.backup
+
+             patch -p1 < susfs.patch || true
+
              bash inline.sh
+
+             mv fs/namespace.c.backup fs/namespace.c
+             mv fs/proc/cmdline.c.backup fs/proc/cmdline.c
+             mv fs/proc/task_mmu.c.backup fs/proc/task_mmu.c
+
 
            fi
 
