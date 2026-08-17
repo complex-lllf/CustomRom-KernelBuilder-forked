@@ -221,6 +221,12 @@ on:
        type: boolean
        default: false
 
+      fuck_kvm:
+       description: "Fuck-KVM: Disable KVM to prevent unnecessary hassles"
+       required: true
+       type: boolean
+       default: false
+
 jobs:
   Kernel_CI:
     env:
@@ -583,6 +589,11 @@ jobs:
             echo "CONFIG_CC_WERROR=n" >> arch/arm64/configs/${configs_list[0]}
             echo "CONFIG_WERROR=n" >> arch/arm64/configs/${configs_list[0]}
             echo "Disabled WERROR and CC_WERROR"
+          fi
+          if [[ "${{ inputs.fuck_bpf }}" == "true" ]]; then
+             sed -i 's/^CONFIG_KVM=y/CONFIG_KVM=n/' .config
+             sed -i 's/^CONFIG_KVM_ARM_HOST=y/CONFIG_KVM_ARM_HOST=n/' .config
+             sed -i 's/^CONFIG_HAVE_KVM=y/CONFIG_HAVE_KVM=n/' .config
           fi
 
           if [[ "${{ inputs.fuck_modules_sig_protect }}" == "true" ]]; then
