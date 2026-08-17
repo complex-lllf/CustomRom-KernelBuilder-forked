@@ -627,9 +627,9 @@ jobs:
             echo "Enabled KSU_SUSFS"
           fi
 
-          echo "CONFIG_MMU_NOTIFIER=y" >> .config
-
           make O=out $KERNEL_CONFIGS $DROIDSPACES_CONFIG
+
+          echo "CONFIG_MMU_NOTIFIER=y" >> out/.config
 
       - name: Build Kernel Image
         run: |
