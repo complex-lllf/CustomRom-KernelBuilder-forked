@@ -622,6 +622,9 @@ jobs:
             echo "Enabled KSU_SUSFS"
           fi
 
+          echo "CONFIG_RCU_TRACE=y" >> arch/arm64/configs/${configs_list[0]}
+          echo "CONFIG_RCU_TASKS_TRACE=y" >> arch/arm64/configs/${configs_list[0]}
+
           make O=out $KERNEL_CONFIGS $DROIDSPACES_CONFIG
 
           echo "CONFIG_MMU_NOTIFIER=y" >> out/.config
